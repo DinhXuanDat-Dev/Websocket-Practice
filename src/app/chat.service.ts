@@ -1,29 +1,39 @@
-import { Injectable } from '@angular/core';
-import { Subject, map } from 'rxjs';
-import { WebsocketService } from './websocket.service';
-
-const CHAT_URL = "ws://echo.websocket.org/";
-
-export interface Message {
-  author: string;
-  message: string;
-}
+import { Injectable } from "@angular/core";
+import { Subject, catchError, map, throwError } from "rxjs";
+import { WebsocketService } from "./websocket.service";
 
 @Injectable()
 export class ChatService {
-  public messages: Subject<Message>;
 
-  constructor(wsService: WebsocketService) {
-    this.messages = <Subject<Message>>wsService.connect(CHAT_URL).pipe(
-      map(
-        (response: MessageEvent): Message => {
-          let data = JSON.parse(response.data);
-          return {
-            author: data.author,
-            message: data.message
-          };
-        }
-      )
-    )
+  messages: Subject<any>;
+
+  // Our constructor calls our wsService connect method
+  constructor(
+    _wsService: WebsocketService
+  ) {
+
+    this.messages = <Subject<any>>_wsService
+      .connect()
+      .pipe(
+        map((response: any): any => {
+          console.log('response', response);
+          return response;
+        }),
+        catchError((error: any) => {
+          // Handle the error here
+          console.error('An error occurred:', error);
+          // Optionally, you can throw a new error or return a fallback value
+          return throwError('An error occurred'); // Example of throwing a new error
+          // or return of(null); // Example of returning a fallback value
+        })
+      );
+
   }
+
+  // Our simplified interface for sending
+  // messages back to our socket.io server
+  sendMsg(msg: any) {
+    this.messages.next(msg);
+  }
+
 }

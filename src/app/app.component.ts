@@ -9,21 +9,20 @@ import { ChatService } from './chat.service';
 export class AppComponent {
   userInput: string = '';
   constructor(private chatService: ChatService) {
-    chatService.messages.subscribe(msg => {
-      console.log("Response from websocket: " + msg);
-    });
+
   }
 
-  private message = {
-    author: "xuan dat",
-    message: this.userInput
-  };
+  ngOnInit() {
+    this.chatService.messages.subscribe(
+      {
+        next: msg => console.log('init msg', msg),
+        error: err => console.error('Observable emitted an error: ' + err),
+      }
+    )
+  }
 
   sendMsg() {
-    this.message.message = this.userInput;
-    console.log("new message from client to websocket: ", this.message);
-    this.chatService.messages.next(this.message);
-    this.clearInput();
+    this.chatService.sendMsg(this.userInput);
   }
 
   clearInput() {
